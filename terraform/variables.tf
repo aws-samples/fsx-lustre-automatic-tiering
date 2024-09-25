@@ -21,6 +21,7 @@ variable "per_unit_storage_throughput" {
 }
 
 variable "sns_topic_email" {
+  description = "The percent of total storage left that will trigger an email alert."
   type    = string
   default = "example@example.com"
 }
