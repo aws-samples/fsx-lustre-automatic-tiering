@@ -20,8 +20,6 @@ provider "aws" {
 locals {
   dra_file_system_path                = "/dra"
   dra_s3_bucket_prefix                = "fsxl-dra"
-  alarm_dra_storage_pct_thoreshold    = 0.15
-  alarm_generic_storage_pct_threshold = 0.25
   tags = {
     env    = var.environment
     region = var.region
@@ -99,7 +97,6 @@ resource "aws_s3_bucket" "dra_bucket" {
   force_destroy = true
   tags          = local.tags
 }
-// FEEDBACK: BLOCK PUBLIC ACCESS, ADD ENCRYPTION
 # public access block
 resource "aws_s3_bucket_public_access_block" "public_block" {
   bucket                  = aws_s3_bucket.dra_bucket.id
@@ -264,7 +261,7 @@ resource "aws_scheduler_schedule" "fsxl_schedule" {
       ReleaseConfiguration = {
         DurationSinceLastAccess = {
           Unit  = "DAYS"
-          Value = 2
+          Value = var.duration_since_last_access_value
         }
       }
       Report = {
@@ -293,8 +290,8 @@ resource "aws_cloudwatch_metric_alarm" "fsxl_available_storage_alarm" {
   namespace                 = "AWS/FSx"
   period                    = 60
   statistic                 = "Sum"
-  threshold                 = var.storage_capacity * 1000000000 * local.alarm_dra_storage_pct_thoreshold
-  alarm_description         = "This alarm triggers a DRA release when available storage capacity on the associated FSxL (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", local.alarm_dra_storage_pct_thoreshold * 100))}%"
+  threshold                 = var.storage_capacity * 1000000000 * var.alarm_storage_pct_threshold_for_sns_notifications
+  alarm_description         = "This alarm triggers a DRA release when available storage capacity on the associated FSxL (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", var.alarm_storage_pct_threshold_for_sns_notifications * 100))}%"
   insufficient_data_actions = []
   alarm_actions             = [aws_lambda_function.trigger_fsxl_dra_release.arn]
   tags                      = local.tags
@@ -312,8 +309,8 @@ resource "aws_cloudwatch_metric_alarm" "fsxl_available_storage_alarm_for_sns" {
   namespace                 = "AWS/FSx"
   period                    = 60
   statistic                 = "Sum"
-  threshold                 = var.storage_capacity * 1000000000 * local.alarm_generic_storage_pct_threshold
-  alarm_description         = "This alarm sends SNS notifications when available storage capacity on the associated FSxl (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", local.alarm_generic_storage_pct_threshold * 100))}%"
+  threshold                 = var.storage_capacity * 1000000000 * var.alarm_storage_pct_threshold_for_dra_emergency_release
+  alarm_description         = "This alarm sends SNS notifications when available storage capacity on the associated FSxl (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", var.alarm_storage_pct_threshold_for_dra_emergency_release * 100))}%"
   insufficient_data_actions = []
   alarm_actions             = [aws_sns_topic.fsxl_storage_notification.arn]
   tags                      = local.tags

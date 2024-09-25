@@ -24,3 +24,21 @@ variable "sns_topic_email" {
   type    = string
   default = "example@example.com"
 }
+
+variable "alarm_storage_pct_threshold_for_sns_notifications" {
+  description = "Threshold percentage for DRA storage alarm"
+  type        = number
+  default     = 0.15
+}
+
+variable "alarm_storage_pct_threshold_for_dra_emergency_release" {
+  description = "Threshold percentage for emergency release of data from DRA directory"
+  type        = number
+  default     = 0.25
+}
+
+variable "duration_since_last_access_value" {
+  description = "Duration since last access value"
+  type        = number
+  default     = 2
+}
