@@ -172,11 +172,11 @@ resource "aws_lambda_function" "trigger_fsxl_dra_release" {
     subnet_ids         = module.vpc.public_subnets
     security_group_ids = [aws_security_group.fsxl_sg.id]
   }
-  handler = "index.lambda_handler"
-  runtime = "python3.12"
-  timeout = 30
+  handler                 = "index.lambda_handler"
+  runtime                 = "python3.12"
+  timeout                 = 30
   code_signing_config_arn = aws_lambda_code_signing_config.dra_lambda.arn
-  tags = local.tags
+  tags                    = local.tags
   environment {
     variables = {
       days_since_last_access = 0
@@ -233,10 +233,10 @@ data "aws_iam_policy_document" "fsx_access" {
     resources = ["arn:aws:fsx:${var.region}::file-system/*"]
   }
   statement {
-    actions   = ["ec2:CreateNetworkInterface","ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"]
+    actions   = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"]
     resources = ["*"]
   }
-  
+
 }
 # IAM role for lambda
 resource "aws_iam_role" "aws_lambda_role" {
