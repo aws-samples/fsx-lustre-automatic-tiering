@@ -1,4 +1,3 @@
-Here is a sample README.md file for the document:
 
 # Leveraging FSx for Lustre as a Scalable S3 Cache with Automated File Release for Cost Optimization
 
