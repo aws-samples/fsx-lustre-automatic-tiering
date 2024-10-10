@@ -18,8 +18,8 @@ provider "aws" {
 #                               Locals                                  #
 # ----------------------------------------------------------------------#
 locals {
-  dra_file_system_path                = "/dra"
-  dra_s3_bucket_prefix                = "fsxl-dra"
+  dra_file_system_path = "/dra"
+  dra_s3_bucket_prefix = "fsxl-dra"
   tags = {
     env    = var.environment
     region = var.region
@@ -35,13 +35,14 @@ data "aws_availability_zones" "available" {
 }
 
 module "vpc" {
-  source             = "terraform-aws-modules/vpc/aws"
-  name               = "demo-vpc"
-  cidr               = "10.0.0.0/16"
-  azs                = data.aws_availability_zones.available.names
-  private_subnets    = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets     = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-  tags               = local.tags
+  # source             = "terraform-aws-modules/vpc/aws"
+  source          = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git?ref=v5.13.0"
+  name            = "demo-vpc"
+  cidr            = "10.0.0.0/16"
+  azs             = data.aws_availability_zones.available.names
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  tags            = local.tags
 }
 
 
@@ -67,6 +68,7 @@ resource "aws_security_group" "fsxl_sg" {
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
+    description      = "Allow all out bound ports to all ipaddress"
     ipv6_cidr_blocks = ["::/0"]
   }
   tags = local.tags
@@ -114,6 +116,20 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
     }
   }
 }
+# S3 bucket versioning eanble
+resource "aws_s3_bucket_versioning" "dra_bucket_versioning" {
+  bucket = aws_s3_bucket.dra_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+# S3 bucket logging
+resource "aws_s3_bucket_logging" "dra_bucket_logging" {
+  bucket = aws_s3_bucket.dra_bucket.id
+
+  target_bucket = aws_s3_bucket.dra_bucket.id
+  target_prefix = local.dra_s3_bucket_prefix
+}
 
 # Data Repository Association
 resource "aws_fsx_data_repository_association" "fsxl_dra" {
@@ -152,15 +168,30 @@ resource "aws_lambda_function" "trigger_fsxl_dra_release" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   role             = aws_iam_role.aws_lambda_role.arn
-  handler          = "index.lambda_handler"
-  runtime          = "python3.12"
-  timeout          = 30
-  tags             = local.tags
+  vpc_config {
+    subnet_ids         = module.vpc.public_subnets
+    security_group_ids = [aws_security_group.fsxl_sg.id]
+  }
+  handler = "index.lambda_handler"
+  runtime = "python3.12"
+  timeout = 30
+  code_signing_config_arn = aws_lambda_code_signing_config.dra_lambda.arn
+  tags = local.tags
   environment {
     variables = {
       days_since_last_access = 0
       dra_file_system_path   = "/dra"
     }
+  }
+}
+
+# Lambda Code Signining Config
+resource "aws_lambda_code_signing_config" "dra_lambda" {
+  allowed_publishers {
+    signing_profile_version_arns = ["arn:aws:signer:${var.region}:${data.aws_caller_identity.current.account_id}:/signing-profile/fsxl_dra_release_lambda"]
+  }
+  policies {
+    untrusted_artifact_on_deployment = "Warn"
   }
 }
 
@@ -175,7 +206,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_alarms" {
 # Lambda Cloudwatch LogGroup
 resource "aws_cloudwatch_log_group" "trigger_fsxl_dra_release" {
   name              = format("/aws/lambda/%s", aws_lambda_function.trigger_fsxl_dra_release.function_name)
-  retention_in_days = 30
+  retention_in_days = 365
   tags              = local.tags
 }
 
@@ -199,8 +230,13 @@ data "aws_iam_policy_document" "fsx_access" {
       "fsx:CreateDataRepositoryTask",
       "fsx:DescribeDataRepositoryAssociations"
     ]
+    resources = ["arn:aws:fsx:${var.region}::file-system/*"]
+  }
+  statement {
+    actions   = ["ec2:CreateNetworkInterface","ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"]
     resources = ["*"]
   }
+  
 }
 # IAM role for lambda
 resource "aws_iam_role" "aws_lambda_role" {
@@ -209,6 +245,7 @@ resource "aws_iam_role" "aws_lambda_role" {
   tags               = local.tags
   managed_policy_arns = [
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   ]
 
   inline_policy {
@@ -251,6 +288,7 @@ resource "aws_iam_role" "eventbridge_scheduler_role" {
 resource "aws_scheduler_schedule" "fsxl_schedule" {
   name                = "fsxl_release_schedule_${aws_fsx_lustre_file_system.demo_file_system.id}"
   schedule_expression = "rate(1 days)"
+  kms_key_arn         = aws_kms_key.custom_sns_key.arn
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:fsx:createDataRepositoryTask"
     role_arn = aws_iam_role.eventbridge_scheduler_role.arn

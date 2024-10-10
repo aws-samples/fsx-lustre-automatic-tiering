@@ -22,8 +22,8 @@ variable "per_unit_storage_throughput" {
 
 variable "sns_topic_email" {
   description = "The email to send alerts to when storage is low"
-  type    = string
-  default = "example@example.com"
+  type        = string
+  default     = "example@example.com"
 }
 
 variable "alarm_storage_pct_threshold_for_sns_notifications" {
