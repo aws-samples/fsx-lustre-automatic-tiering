@@ -40,7 +40,7 @@ When you are done with your testing, run `terraform destroy` to clean up the dep
 
 ## Additional Resources
 - [Amazon FSx for Lustre Documentation](https://aws.amazon.com/fsx/lustre/)
-- [Automating File Eviction from Amazon FSx for Lustre Using Data Repository Association](https://docs.aws.amazon.com/fsx/latest/LustreGuide/overview-dra-data-repo.html)
+- [Amazon FSx for Lustre Using Data Repository Association](https://docs.aws.amazon.com/fsx/latest/LustreGuide/overview-dra-data-repo.html)
 
 ## Security
 
