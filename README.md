@@ -24,7 +24,11 @@ To deploy the solution using the provided Terraform configuration, follow these 
 
 1. Clone the Github repository to your local machine.
 2. Navigate to the `terraform` directory within the repository.
-3. Review the `variables.tf` file and adjust the variable values according to your requirements.
+3. Review the `variables.tf` file and adjust the variable values according to your requirements.Following are a few important variables
+    * sns_topic_email - Email to use for SNS notification, update to your email address.
+    * alarm_storage_pct_threshold_for_sns_notifications - The file system’s available storage threshold below which email notifications are sent (default: 0.15).
+    * alarm_storage_pct_threshold_for_dra_emergency_release - The file system’s available storage threshold below which an emergency release is triggered (default: 0.25). 
+    * duration_since_last_access_value: The variable sets the file contents eviction threshold in days, to release file contents from file system (default: 2).
 4. Initialize the Terraform working directory by running `terraform init`.
 5. Review the execution plan by running `terraform plan`.
 6. If the execution plan looks correct, apply the changes by running `terraform apply -auto-approve`.
