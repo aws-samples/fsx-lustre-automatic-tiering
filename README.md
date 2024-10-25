@@ -1,5 +1,5 @@
 
-# Leveraging FSx for Lustre as a Scalable S3 Cache with Automated File Release for Cost Optimization
+# Optimizing FSx for Lustre storage costs using automatic data tiering with Amazon S3
 
 Managing high-performance file storage can be a significant operational and cost challenge for many organizations, especially those running compute-intensive workloads like high-performance computing (HPC) or data analytics. This project demonstrates how you can leverage Amazon FSx for Lustre (FSxL) as a high-performance caching layer in front of Amazon S3, enabling cost optimization through automated file release.
 
