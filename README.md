@@ -1,7 +1,7 @@
 
 # Optimizing FSx for Lustre storage costs using automatic data tiering with Amazon S3
 
-Managing high-performance file storage can be a significant operational and cost challenge for many organizations, especially those running compute-intensive workloads like high-performance computing (HPC) or data analytics. This project demonstrates how you can leverage Amazon FSx for Lustre (FSxL) as a high-performance caching layer in front of Amazon S3, enabling cost optimization through automated file release.
+Managing high-performance file storage can be a significant operational and cost challenge for many organizations, especially those running compute-intensive workloads like high-performance computing (HPC) or data analytics. This project demonstrates how you can leverage Amazon FSx for Lustre (FSxL) as a high-performance tier in front of Amazon S3, enabling cost optimization through automated file release.
 
 ## Solution Overview
 The proposed solution leverages the following key components:
@@ -12,8 +12,6 @@ The proposed solution leverages the following key components:
 5. Capacity Monitoring and Alerting
 6. DRA Emergency Release Task
 
-The architecture allows you to use FSxL as a high-performance cache for your Amazon S3 data, with an automated file release mechanism to optimize file system capacity.
-
 ## Prerequisites
 Before starting, you will need the following prerequisites:
 1. Terraform: The Terraform CLI installed on your local machine or remote development environment such as AWS Cloud9.
@@ -22,7 +20,7 @@ Before starting, you will need the following prerequisites:
 ## Solution Deployment
 To deploy the solution using the provided Terraform configuration, follow these steps:
 
-1. Clone the Github repository to your local machine.
+1. Clone the GitHub repository to your local machine.
 2. Navigate to the `terraform` directory within the repository.
 3. Review the `variables.tf` file and adjust the variable values according to your requirements.Following are a few important variables
     * sns_topic_email - Email to use for SNS notification, update to your email address.
