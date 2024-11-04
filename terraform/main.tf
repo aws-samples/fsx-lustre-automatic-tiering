@@ -172,7 +172,7 @@ resource "aws_lambda_function" "trigger_fsxl_dra_release" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   role             = aws_iam_role.aws_lambda_role.arn
   vpc_config {
-    subnet_ids         = module.vpc.public_subnets
+    subnet_ids         = module.vpc.private_subnets
     security_group_ids = [aws_security_group.fsxl_sg.id]
   }
   handler                 = "index.lambda_handler"
@@ -233,7 +233,7 @@ data "aws_iam_policy_document" "fsx_access" {
       "fsx:CreateDataRepositoryTask",
       "fsx:DescribeDataRepositoryAssociations"
     ]
-    resources = ["arn:aws:fsx:${var.region}::file-system/*"]
+    resources = ["*"]
   }
   statement {
     actions   = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"]
@@ -291,7 +291,7 @@ resource "aws_iam_role" "eventbridge_scheduler_role" {
 resource "aws_scheduler_schedule" "fsxl_schedule" {
   name                = "fsxl_release_schedule_${aws_fsx_lustre_file_system.demo_file_system.id}"
   schedule_expression = "rate(1 days)"
-  kms_key_arn         = aws_kms_key.custom_sns_key.arn
+  # kms_key_arn         = aws_kms_key.custom_sns_key.arn
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:fsx:createDataRepositoryTask"
     role_arn = aws_iam_role.eventbridge_scheduler_role.arn
