@@ -331,7 +331,7 @@ resource "aws_cloudwatch_metric_alarm" "fsxl_available_storage_alarm" {
   namespace                 = "AWS/FSx"
   period                    = 60
   statistic                 = "Sum"
-  threshold                 = var.storage_capacity * 1000000000 * var.alarm_storage_pct_threshold_for_sns_notifications
+  threshold                 = var.storage_capacity * 1e9 * var.alarm_storage_pct_threshold_for_sns_notifications
   alarm_description         = "This alarm triggers a DRA release when available storage capacity on the associated FSxL (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", var.alarm_storage_pct_threshold_for_sns_notifications * 100))}%"
   insufficient_data_actions = []
   alarm_actions             = [aws_lambda_function.trigger_fsxl_dra_release.arn]
@@ -350,7 +350,7 @@ resource "aws_cloudwatch_metric_alarm" "fsxl_available_storage_alarm_for_sns" {
   namespace                 = "AWS/FSx"
   period                    = 60
   statistic                 = "Sum"
-  threshold                 = var.storage_capacity * 1000000000 * var.alarm_storage_pct_threshold_for_dra_emergency_release
+  threshold                 = var.storage_capacity * 1e9 * var.alarm_storage_pct_threshold_for_dra_emergency_release
   alarm_description         = "This alarm sends SNS notifications when available storage capacity on the associated FSxl (${aws_fsx_lustre_file_system.demo_file_system.id} / ${aws_fsx_lustre_file_system.demo_file_system.id}) is <= ${tonumber(format("%.2f", var.alarm_storage_pct_threshold_for_dra_emergency_release * 100))}%"
   insufficient_data_actions = []
   alarm_actions             = [aws_sns_topic.fsxl_storage_notification.arn]
