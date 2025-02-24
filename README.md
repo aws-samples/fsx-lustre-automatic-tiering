@@ -12,6 +12,8 @@ The proposed solution leverages the following key components:
 5. Capacity Monitoring and Alerting
 6. DRA Emergency Release Task
 
+![Architecture Diagram](./assets/architecture.png)
+
 ## Prerequisites
 Before starting, you will need the following prerequisites:
 1. Terraform: The Terraform CLI installed on your local machine or remote development environment such as AWS Cloud9.
